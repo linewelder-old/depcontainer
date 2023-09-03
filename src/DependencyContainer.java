@@ -144,7 +144,11 @@ public class DependencyContainer {
         final Object[] arguments = new Object[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
             try {
-                arguments[i] = getComponent(parameters[i].getType(), null);
+                final Class<?> parameterType = parameters[i].getType();
+                final String qualifier = Optional.ofNullable(parameters[i].getAnnotation(Qualifier.class))
+                        .map(Qualifier::value)
+                        .orElse(null);
+                arguments[i] = getComponent(parameterType, qualifier);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Unable to resolve dependencies for " + klass + ".", e);
             }
