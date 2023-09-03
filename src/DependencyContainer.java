@@ -2,6 +2,10 @@ import java.lang.reflect.*;
 import java.util.*;
 
 public class DependencyContainer {
+    /**
+     * Сопоставляет тип с компонентами этого типа.
+     * Если компонент в стадии создания, то типу сопоставлен null для обнаружения цикличных зависимостей.
+     */
     private static final Map<Class<?>, Object> objects = new HashMap<>();
 
     public static <T> void addInstance(Class<?> klass, T instance) {
@@ -25,14 +29,20 @@ public class DependencyContainer {
             throw new IllegalArgumentException(klass + " does not have Component attribute.");
         }
 
-        final Object object = objects.get(klass);
-        if (object != null) {
-            return klass.cast(object);
+        if (!objects.containsKey(klass)) {
+            objects.put(klass, null);
+            final T instance = instantiate(klass);
+            objects.put(klass, instance);
+            return instance;
         }
 
-        final T instance = instantiate(klass);
-        objects.put(klass, instance);
-        return instance;
+        final Object object = objects.get(klass);
+        if (object == null) {
+            throw new IllegalArgumentException(
+                    "Cyclic dependency detected: " + klass + " instance is currently being created.");
+        }
+
+        return klass.cast(object);
     }
 
     private static <T> T instantiate(Class<T> klass) {
