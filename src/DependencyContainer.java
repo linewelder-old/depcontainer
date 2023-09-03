@@ -4,7 +4,7 @@ import java.util.*;
 public class DependencyContainer {
     private static final Map<Class<?>, Object> objects = new HashMap<>();
 
-    public static <T> void add(Class<?> klass, T instance) {
+    public static <T> void addInstance(Class<?> klass, T instance) {
         if (klass.getAnnotation(Component.class) == null) {
             throw new IllegalArgumentException(klass + " does not have Component attribute.");
         }
@@ -12,11 +12,11 @@ public class DependencyContainer {
         objects.put(klass, instance);
     }
 
-    public static <T> void add(T instance) {
-        add(instance.getClass(), instance);
+    public static <T> void addInstance(T instance) {
+        addInstance(instance.getClass(), instance);
     }
 
-    public static <T> T get(Class<T> klass) {
+    public static <T> T getInstance(Class<T> klass) {
         if (klass.getAnnotation(Component.class) == null) {
             throw new IllegalArgumentException(klass + " does not have Component attribute.");
         }
@@ -38,7 +38,7 @@ public class DependencyContainer {
         final Object[] arguments = new Object[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
             try {
-                arguments[i] = get(parameters[i].getType());
+                arguments[i] = getInstance(parameters[i].getType());
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Unable to find dependency for " + klass + ".", e);
             }
