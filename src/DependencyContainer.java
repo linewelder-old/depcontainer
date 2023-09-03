@@ -6,37 +6,37 @@ public class DependencyContainer {
      * Сопоставляет тип с компонентами этого типа.
      * Если компонент в стадии создания, то типу сопоставлен null для обнаружения цикличных зависимостей.
      */
-    private static final Map<Class<?>, Object> objects = new HashMap<>();
+    private static final Map<Class<?>, Object> components = new HashMap<>();
 
-    public static <T> void addInstance(Class<?> klass, T instance) {
+    public static <T> void addComponent(Class<?> klass, T component) {
         if (klass.getAnnotation(Component.class) == null) {
             throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
 
-        if (objects.containsKey(klass)) {
+        if (components.containsKey(klass)) {
             throw new IllegalArgumentException("The container already contains a " + klass + " instance.");
         }
 
-        objects.put(klass, instance);
+        components.put(klass, component);
     }
 
-    public static <T> void addInstance(T instance) {
-        addInstance(instance.getClass(), instance);
+    public static <T> void addComponent(T component) {
+        addComponent(component.getClass(), component);
     }
 
-    public static <T> T getInstance(Class<T> klass) {
+    public static <T> T getComponent(Class<T> klass) {
         if (klass.getAnnotation(Component.class) == null) {
             throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
 
-        if (!objects.containsKey(klass)) {
-            objects.put(klass, null);
+        if (!components.containsKey(klass)) {
+            components.put(klass, null);
             final T instance = instantiate(klass);
-            objects.put(klass, instance);
+            components.put(klass, instance);
             return instance;
         }
 
-        final Object object = objects.get(klass);
+        final Object object = components.get(klass);
         if (object == null) {
             throw new IllegalArgumentException(
                     "Cyclic dependency detected: " + klass + " instance is currently being created.");
@@ -52,7 +52,7 @@ public class DependencyContainer {
         final Object[] arguments = new Object[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
             try {
-                arguments[i] = getInstance(parameters[i].getType());
+                arguments[i] = getComponent(parameters[i].getType());
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Unable to resolve dependencies for " + klass + ".", e);
             }
