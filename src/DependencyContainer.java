@@ -10,7 +10,7 @@ public class DependencyContainer {
 
     public static <T> void addInstance(Class<?> klass, T instance) {
         if (klass.getAnnotation(Component.class) == null) {
-            throw new IllegalArgumentException(klass + " does not have Component attribute.");
+            throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
 
         if (objects.containsKey(klass)) {
@@ -26,7 +26,7 @@ public class DependencyContainer {
 
     public static <T> T getInstance(Class<T> klass) {
         if (klass.getAnnotation(Component.class) == null) {
-            throw new IllegalArgumentException(klass + " does not have Component attribute.");
+            throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
 
         if (!objects.containsKey(klass)) {
@@ -54,7 +54,7 @@ public class DependencyContainer {
             try {
                 arguments[i] = getInstance(parameters[i].getType());
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Unable to find dependency for " + klass + ".", e);
+                throw new IllegalArgumentException("Unable to resolve dependencies for " + klass + ".", e);
             }
         }
 
@@ -75,7 +75,7 @@ public class DependencyContainer {
 
             return instance;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException("Failed to construct " + klass + " instance.", e);
+            throw new RuntimeException("Failed to call " + constructor + ".", e);
         }
     }
 
