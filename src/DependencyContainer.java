@@ -45,13 +45,15 @@ public class DependencyContainer {
                         try {
                             method.invoke(instance);
                         } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw new RuntimeException(e);
+                            throw new RuntimeException(
+                                    "Failed to call " + method.getName() + " post-constructor method on " +
+                                    klass + " instance.", e);
                         }
                     });
 
             return instance;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to construct " + klass + " instance.", e);
         }
     }
 
