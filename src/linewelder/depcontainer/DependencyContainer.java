@@ -121,6 +121,8 @@ public class DependencyContainer {
      */
     private static Object findComponent(Class<?> klass, String qualifier) {
         NamedComponentNode node = components.get(klass);
+        assert node != null;
+
         if (qualifier == null) {
             return node.component;
         }
