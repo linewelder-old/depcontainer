@@ -48,26 +48,57 @@ public class DependencyContainer {
         addComponent(component.getClass(), null, component);
     }
 
-    public static <T> T getComponent(Class<T> klass) {
+    /**
+     * Достаёт из конейнера или создаёт новый компонент данного типа и с данным квалификатором.
+     * Если компонент в процессе создания - кидает исключение для избежания цикличных зависимостей.
+     * @param klass Тип компонента.
+     * @param qualifier Если null, то достаёт первый попавшийся компонент из контейнера. Иначе - находит компонент
+     *                  с таким квалификатором.
+     * @return Найденный или новосозданный компонент.
+     * @param <T> Тип компонента.
+     */
+    public static <T> T getComponent(Class<T> klass, String qualifier) {
         if (klass.getAnnotation(Component.class) == null) {
             throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
 
         if (!components.containsKey(klass)) {
-            setComponentInstance(klass, null, null);
+            setComponentInstance(klass, qualifier, null);
             final T instance = instantiate(klass);
-            setComponentInstance(klass, null, instance);
+            setComponentInstance(klass, qualifier, instance);
             return instance;
         }
 
-        final NamedComponentNode node = components.get(klass);
-        final Object component = node.component;
+        final Object component = findComponent(klass, qualifier);
         if (component == null) {
             throw new IllegalArgumentException(
                     "Cyclic dependency detected: " + klass + " instance is currently being created.");
         }
 
         return klass.cast(component);
+    }
+
+    /**
+     * Находит компонент в контейнере с данным типом и квалификаторм, допуская,
+     * что есть хотя бы один компонент данного типа.
+     * @param klass Тип компонента.
+     * @param qualifier Квалификатор компонента, если null - возвращает первый попавшийся компонент данного типа.
+     * @return Найденый компонент.
+     */
+    private static Object findComponent(Class<?> klass, String qualifier) {
+        NamedComponentNode node = components.get(klass);
+        if (qualifier == null) {
+            return node.component;
+        }
+
+        while (node != null) {
+            if (qualifier.equals(node.qualifier)) {
+                return node.component;
+            }
+            node = node.next;
+        }
+
+        throw new IllegalArgumentException("No " + klass + " instance with qualifier '" + qualifier + "'.");
     }
 
     /**
@@ -113,7 +144,7 @@ public class DependencyContainer {
         final Object[] arguments = new Object[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
             try {
-                arguments[i] = getComponent(parameters[i].getType());
+                arguments[i] = getComponent(parameters[i].getType(), null);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Unable to resolve dependencies for " + klass + ".", e);
             }
