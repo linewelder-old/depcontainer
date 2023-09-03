@@ -25,7 +25,7 @@ public class DependencyContainer {
             throw new IllegalArgumentException(klass + " does not have Component attribute.");
         }
 
-        Object object = objects.get(klass);
+        final Object object = objects.get(klass);
         if (object != null) {
             return klass.cast(object);
         }
