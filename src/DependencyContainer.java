@@ -1,6 +1,10 @@
 import java.lang.reflect.*;
 import java.util.*;
 
+/**
+ * Создаёт по мере востребования и потом хранит объекты классов, обозначенных аннотацией {@link Component}.
+ * Автоматически подставляет нужные аргументы в конструкторы при их создании (dependency injection).
+ */
 public class DependencyContainer {
     /**
      * Звено в списке компонентов с одним типом, но разными квалификаторами.
@@ -8,7 +12,7 @@ public class DependencyContainer {
     private static class NamedComponentNode {
         final String qualifier;
         /**
-         * Если null, - данный компонент в стадии создания.
+         * Если null, — данный компонент в стадии создания.
          */
         Object component;
         NamedComponentNode next = null;
@@ -24,6 +28,14 @@ public class DependencyContainer {
      */
     private static final Map<Class<?>, NamedComponentNode> components = new HashMap<>();
 
+    /**
+     * Добавляет компонент в контейнер. Кидает исключение если компонент с таким типом и квалификатором уже есть.
+     * @param klass Тип компонента.
+     * @param qualifier Квалификатор компонента. Если null, то кидает исключение,
+     *                  если есть хотя бы один компонент такого типа в контейнере.
+     * @param component Компонент для добавления.
+     * @param <T> Тип компонента.
+     */
     public static <T> void addComponent(Class<?> klass, String qualifier, T component) {
         if (component == null) {
             throw new IllegalArgumentException("Component can't be null.");
@@ -36,20 +48,40 @@ public class DependencyContainer {
         }
     }
 
+    /**
+     * Добавляет компонент в контейнер. Кидает исключение если уже есть хотя бы один компонент с таким типом.
+     * @param klass Тип компонента.
+     * @param component Компонент для добавления.
+     * @param <T> Тип компонента.
+     */
     public static <T> void addComponent(Class<?> klass, T component) {
         addComponent(klass, null, component);
     }
 
+    /**
+     * Добавляет компонент в контейнер. Кидает исключение если компонент с таким типом и квалификатором уже есть.
+     * Как тип компонента используется {@code component.getClass()}.
+     * @param qualifier Квалификатор компонента. Если null, то кидает исключение,
+     *                  если есть хотя бы один компонент такого типа в контейнере.
+     * @param component Компонент для добавления.
+     * @param <T> Тип компонента.
+     */
     public static <T> void addComponent(String qualifier, T component) {
         addComponent(component.getClass(), qualifier, component);
     }
 
+    /**
+     * Добавляет компонент в контейнер. Кидает исключение если уже есть хотя бы один компонент с таким типом.
+     * Как тип компонента используется {@code component.getClass()}.
+     * @param component Компонент для добавления.
+     * @param <T> Тип компонента.
+     */
     public static <T> void addComponent(T component) {
         addComponent(component.getClass(), null, component);
     }
 
     /**
-     * Достаёт из конейнера или создаёт новый компонент данного типа и с данным квалификатором.
+     * Достаёт из контейнера или создаёт новый компонент данного типа и с данным квалификатором.
      * Если компонент в процессе создания - кидает исключение для избежания цикличных зависимостей.
      * @param klass Тип компонента.
      * @param qualifier Если null, то достаёт первый попавшийся компонент из контейнера. Иначе - находит компонент
@@ -79,11 +111,11 @@ public class DependencyContainer {
     }
 
     /**
-     * Находит компонент в контейнере с данным типом и квалификаторм, допуская,
+     * Находит компонент в контейнере с данным типом и квалификаторм, считая,
      * что есть хотя бы один компонент данного типа.
      * @param klass Тип компонента.
      * @param qualifier Квалификатор компонента, если null - возвращает первый попавшийся компонент данного типа.
-     * @return Найденый компонент.
+     * @return Найденный компонент.
      */
     private static Object findComponent(Class<?> klass, String qualifier) {
         NamedComponentNode node = components.get(klass);
@@ -107,7 +139,7 @@ public class DependencyContainer {
      * @param qualifier Опциональный квалификатор компонента.
      * @param component Компонент или null.
      * @param <T> Тип компонента.
-     * @return true, если такой компонент уже был в конейнере и был заменён, иначе - false.
+     * @return true, если такой компонент уже был в контейнере и был заменён, иначе - false.
      */
     private static <T> boolean setComponentInstance(Class<?> klass, String qualifier, T component) {
         if (klass.getAnnotation(Component.class) == null) {
@@ -137,6 +169,12 @@ public class DependencyContainer {
         return false;
     }
 
+    /**
+     * Создаёт новый инстанс компонента с данным типом, разрешая его зависимости.
+     * @param klass Тип компонента.
+     * @return Созданный инстанс.
+     * @param <T> Тип компонента.
+     */
     private static <T> T instantiate(Class<T> klass) {
         final Constructor<?> constructor = findSuitableConstructor(klass);
 
@@ -175,6 +213,12 @@ public class DependencyContainer {
         }
     }
 
+    /**
+     * Возвращает конструктор, который должен быть использован для создания инстанса компонента
+     * данного типа.
+     * @param klass Тип компонента.
+     * @return Найденный конструктор.
+     */
     private static Constructor<?> findSuitableConstructor(Class<?> klass) {
         final Constructor<?>[] constructors = klass.getConstructors();
         if (constructors.length == 0) {
