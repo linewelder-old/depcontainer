@@ -2,7 +2,7 @@ import java.lang.reflect.*;
 import java.util.*;
 
 public class DependencyContainer {
-    private static final Map<Class, Object> objects = new HashMap<>();
+    private static final Map<Class<?>, Object> objects = new HashMap<>();
 
     public static <T> void add(Class<?> klass, T instance) {
         objects.put(klass, instance);
