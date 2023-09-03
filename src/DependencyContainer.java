@@ -5,6 +5,10 @@ public class DependencyContainer {
     private static final Map<Class<?>, Object> objects = new HashMap<>();
 
     public static <T> void add(Class<?> klass, T instance) {
+        if (klass.getAnnotation(Component.class) == null) {
+            throw new IllegalArgumentException(klass + " does not have Component attribute.");
+        }
+
         objects.put(klass, instance);
     }
 
@@ -13,6 +17,10 @@ public class DependencyContainer {
     }
 
     public static <T> T get(Class<T> klass) {
+        if (klass.getAnnotation(Component.class) == null) {
+            throw new IllegalArgumentException(klass + " does not have Component attribute.");
+        }
+
         Object object = objects.get(klass);
         if (object != null) {
             return klass.cast(object);
