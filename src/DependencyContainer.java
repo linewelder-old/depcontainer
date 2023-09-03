@@ -13,6 +13,10 @@ public class DependencyContainer {
             throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
 
+        if (!klass.isInstance(component)) {
+            throw new IllegalArgumentException("Component must be a " + klass + " instance.");
+        }
+
         if (components.containsKey(klass)) {
             throw new IllegalArgumentException("The container already contains a " + klass + " instance.");
         }
