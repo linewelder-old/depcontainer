@@ -9,6 +9,10 @@ public class DependencyContainer {
     private static final Map<Class<?>, Object> components = new HashMap<>();
 
     public static <T> void addComponent(Class<?> klass, T component) {
+        if (component == null) {
+            throw new IllegalArgumentException("Component can't be null.");
+        }
+
         if (klass.getAnnotation(Component.class) == null) {
             throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
