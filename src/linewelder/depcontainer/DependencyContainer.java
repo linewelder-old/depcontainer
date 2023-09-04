@@ -160,16 +160,17 @@ public class DependencyContainer {
             throw new IllegalArgumentException("Component must be a " + klass + " instance.");
         }
 
-        if (components.containsKey(klass)) {
-            NamedComponentNode node = components.get(klass);
-            do {
+        NamedComponentNode node = components.get(klass);
+        if (node != null) {
+            while (true) {
                 if (Objects.equals(qualifier, node.qualifier)) {
                     node.component = component;
                     return true;
                 }
 
+                if (node.next == null) break;
                 node = node.next;
-            } while (node.next != null);
+            }
 
             node.next = new NamedComponentNode(qualifier, component);
             return false;
