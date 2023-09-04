@@ -38,6 +38,23 @@
 Для указания квалификатора необходимого компонента можно использовать аннотацию `@Qualifier(String)` на
 параметре.
 
+### Цикличные зависимости
+
+При обнаружении цикла в зависимостях при создании компонента кидается исключение, где сам цикл можно
+проследить по сообщениям исключений.
+
+Например:
+```
+Exception in thread "main" java.lang.IllegalArgumentException: Unable to resolve dependencies for class Application.
+	...
+Caused by: java.lang.IllegalArgumentException: Unable to resolve dependencies for class PenguinFactory.
+	...
+Caused by: java.lang.IllegalArgumentException: Unable to resolve dependencies for class Logger.
+	...
+Caused by: java.lang.IllegalArgumentException: Cyclic dependency detected: class Application instance is currently being created.
+	...
+```
+
 ### События
 
 Методы `addPreAddListener` и `addPostAddListener` позволяют подписаться на добавление новых компонентов
