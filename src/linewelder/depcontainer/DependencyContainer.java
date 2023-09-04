@@ -182,7 +182,8 @@ public class DependencyContainer {
             if (qualifier.equals(node.qualifier)) {
                 if (node.component == null) {
                     throw new IllegalArgumentException(
-                            "Cyclic dependency detected: " + klass + " instance is currently being created.");
+                            "Cyclic dependency detected: " + klass + " instance with qualifier '" +
+                            qualifier + "'is currently being created.");
                 }
                 return node.component;
             }
