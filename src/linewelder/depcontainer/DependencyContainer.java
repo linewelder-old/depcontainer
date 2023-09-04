@@ -30,6 +30,28 @@ public class DependencyContainer {
      */
     private final Map<Class<?>, NamedComponentNode> components = new HashMap<>();
 
+    private final List<ComponentEventListener> preAddListeners = new ArrayList<>();
+    private final List<ComponentEventListener> postAddListeners = new ArrayList<>();
+
+    /**
+     * Добавляет обработчик событий, который должен быть оповещён сразу перед добавлением
+     * нового компонента в контейнер. Также он будет оповещён при попытке замены существующего
+     * компонента с помощью {@code addComponent} перед выбрасыванием исключения.
+     * @param listener Обработчик событий.
+     */
+    public void addPreAddListener(ComponentEventListener listener) {
+        preAddListeners.add(listener);
+    }
+
+    /**
+     * Добавляет обработчик событий, который должен быть оповещён сразу после добавления
+     * нового компонента в контейнер.
+     * @param listener Обработчик событий.
+     */
+    public void addPostAddListener(ComponentEventListener listener) {
+        postAddListeners.add(listener);
+    }
+
     /**
      * Добавляет компонент в контейнер. Кидает исключение если компонент с таким типом и квалификатором уже есть.
      * @param klass Тип компонента.
@@ -43,10 +65,18 @@ public class DependencyContainer {
             throw new IllegalArgumentException("Component can't be null.");
         }
 
+        for (ComponentEventListener listener : preAddListeners) {
+            listener.onEvent(klass, qualifier, component);
+        }
+
         if (setComponentInstance(klass, qualifier, component)) {
             throw new IllegalArgumentException(
                 "The container already contains a " + klass +
                 " instance with qualifier '" + qualifier +"'.");
+        }
+
+        for (ComponentEventListener listener : postAddListeners) {
+            listener.onEvent(klass, qualifier, component);
         }
     }
 
@@ -100,7 +130,15 @@ public class DependencyContainer {
         if (component == null) {
             setComponentInstance(klass, qualifier, null);
             final T instance = instantiate(klass);
+            for (ComponentEventListener listener : preAddListeners) {
+                listener.onEvent(klass, qualifier, instance);
+            }
+
             setComponentInstance(klass, qualifier, instance);
+            for (ComponentEventListener listener : postAddListeners) {
+                listener.onEvent(klass, qualifier, instance);
+            }
+
             return instance;
 
         }
