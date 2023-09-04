@@ -129,7 +129,7 @@ public class DependencyContainer {
         final Object component = findComponent(klass, qualifier);
         if (component == null) {
             setComponentInstance(klass, qualifier, null);
-            final T instance = instantiate(klass);
+            final T instance = instantiate(klass, qualifier);
             for (ComponentEventListener listener : preAddListeners) {
                 listener.onEvent(klass, qualifier, instance);
             }
@@ -231,12 +231,12 @@ public class DependencyContainer {
     }
 
     /**
-     * Создаёт новый инстанс компонента с данным типом, разрешая его зависимости.
+     * Создаёт новый инстанс компонента с данными типом и квалификатором, разрешая его зависимости.
      * @param klass Тип компонента.
      * @return Созданный инстанс.
      * @param <T> Тип компонента.
      */
-    private <T> T instantiate(Class<T> klass) {
+    private <T> T instantiate(Class<T> klass, String qualifier) {
         final Constructor<?> constructor = findSuitableConstructor(klass);
 
         final Parameter[] parameters = constructor.getParameters();
@@ -244,10 +244,15 @@ public class DependencyContainer {
         for (int i = 0; i < parameters.length; i++) {
             try {
                 final Class<?> parameterType = parameters[i].getType();
-                final String qualifier = Optional.ofNullable(parameters[i].getAnnotation(Qualifier.class))
-                        .map(Qualifier::value)
-                        .orElse(null);
-                arguments[i] = getComponent(parameterType, qualifier);
+                if (parameterType.isAssignableFrom(String.class)) {
+                    arguments[i] = qualifier;
+                } else {
+                    final String parameterQualifier =
+                            Optional.ofNullable(parameters[i].getAnnotation(Qualifier.class))
+                                .map(Qualifier::value)
+                                .orElse(null);
+                    arguments[i] = getComponent(parameterType, parameterQualifier);
+                }
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Unable to resolve dependencies for " + klass + ".", e);
             }
