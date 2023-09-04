@@ -28,7 +28,7 @@ public class DependencyContainer {
     /**
      * Сопоставляет типу компонент, или список компонентов, подставляемый при разрешении зависимостей.
      */
-    private static final Map<Class<?>, NamedComponentNode> components = new HashMap<>();
+    private final Map<Class<?>, NamedComponentNode> components = new HashMap<>();
 
     /**
      * Добавляет компонент в контейнер. Кидает исключение если компонент с таким типом и квалификатором уже есть.
@@ -38,7 +38,7 @@ public class DependencyContainer {
      * @param component Компонент для добавления.
      * @param <T> Тип компонента.
      */
-    public static <T> void addComponent(Class<?> klass, String qualifier, T component) {
+    public <T> void addComponent(Class<?> klass, String qualifier, T component) {
         if (component == null) {
             throw new IllegalArgumentException("Component can't be null.");
         }
@@ -56,7 +56,7 @@ public class DependencyContainer {
      * @param component Компонент для добавления.
      * @param <T> Тип компонента.
      */
-    public static <T> void addComponent(Class<?> klass, T component) {
+    public <T> void addComponent(Class<?> klass, T component) {
         addComponent(klass, null, component);
     }
 
@@ -68,7 +68,7 @@ public class DependencyContainer {
      * @param component Компонент для добавления.
      * @param <T> Тип компонента.
      */
-    public static <T> void addComponent(String qualifier, T component) {
+    public <T> void addComponent(String qualifier, T component) {
         addComponent(component.getClass(), qualifier, component);
     }
 
@@ -78,7 +78,7 @@ public class DependencyContainer {
      * @param component Компонент для добавления.
      * @param <T> Тип компонента.
      */
-    public static <T> void addComponent(T component) {
+    public <T> void addComponent(T component) {
         addComponent(component.getClass(), null, component);
     }
 
@@ -91,7 +91,7 @@ public class DependencyContainer {
      * @return Найденный или новосозданный компонент.
      * @param <T> Тип компонента.
      */
-    public static <T> T getComponent(Class<T> klass, String qualifier) {
+    public <T> T getComponent(Class<T> klass, String qualifier) {
         if (klass.getAnnotation(Component.class) == null) {
             throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
@@ -115,7 +115,7 @@ public class DependencyContainer {
      * @param qualifier Квалификатор компонента, если null - возвращает первый попавшийся компонент данного типа.
      * @return Найденный компонент или null, если такого нет.
      */
-    private static Object findComponent(Class<?> klass, String qualifier) {
+    private Object findComponent(Class<?> klass, String qualifier) {
         NamedComponentNode node = components.get(klass);
         if (node == null) {
             return null;
@@ -151,7 +151,7 @@ public class DependencyContainer {
      * @param <T> Тип компонента.
      * @return true, если такой компонент уже был в контейнере и был заменён, иначе - false.
      */
-    private static <T> boolean setComponentInstance(Class<?> klass, String qualifier, T component) {
+    private <T> boolean setComponentInstance(Class<?> klass, String qualifier, T component) {
         if (klass.getAnnotation(Component.class) == null) {
             throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
@@ -186,7 +186,7 @@ public class DependencyContainer {
      * @return Созданный инстанс.
      * @param <T> Тип компонента.
      */
-    private static <T> T instantiate(Class<T> klass) {
+    private <T> T instantiate(Class<T> klass) {
         final Constructor<?> constructor = findSuitableConstructor(klass);
 
         final Parameter[] parameters = constructor.getParameters();
@@ -230,7 +230,7 @@ public class DependencyContainer {
      * @param klass Тип компонента.
      * @return Найденный конструктор.
      */
-    private static Constructor<?> findSuitableConstructor(Class<?> klass) {
+    private Constructor<?> findSuitableConstructor(Class<?> klass) {
         final Constructor<?>[] constructors = klass.getConstructors();
         if (constructors.length == 0) {
             throw new IllegalArgumentException("No public constructors in " + klass + ".");
