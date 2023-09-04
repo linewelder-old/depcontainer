@@ -96,45 +96,51 @@ public class DependencyContainer {
             throw new IllegalArgumentException(klass + " does not have a Component attribute.");
         }
 
-        if (!components.containsKey(klass)) {
+        final Object component = findComponent(klass, qualifier);
+        if (component == null) {
             setComponentInstance(klass, qualifier, null);
             final T instance = instantiate(klass);
             setComponentInstance(klass, qualifier, instance);
             return instance;
-        }
 
-        final Object component = findComponent(klass, qualifier);
-        if (component == null) {
-            throw new IllegalArgumentException(
-                    "Cyclic dependency detected: " + klass + " instance is currently being created.");
         }
 
         return klass.cast(component);
     }
 
     /**
-     * Находит компонент в контейнере с данным типом и квалификаторм, считая,
-     * что есть хотя бы один компонент данного типа.
+     * Находит компонент в контейнере с данным типом и квалификаторм.
+     * Кидает исключение, если компонент в стадии создания.
      * @param klass Тип компонента.
      * @param qualifier Квалификатор компонента, если null - возвращает первый попавшийся компонент данного типа.
-     * @return Найденный компонент.
+     * @return Найденный компонент или null, если такого нет.
      */
     private static Object findComponent(Class<?> klass, String qualifier) {
         NamedComponentNode node = components.get(klass);
-        assert node != null;
+        if (node == null) {
+            return null;
+        }
 
         if (qualifier == null) {
+            if (node.component == null) {
+                throw new IllegalArgumentException(
+                        "Cyclic dependency detected: " + klass + " instance is currently being created.");
+            }
             return node.component;
         }
 
         while (node != null) {
             if (qualifier.equals(node.qualifier)) {
+                if (node.component == null) {
+                    throw new IllegalArgumentException(
+                            "Cyclic dependency detected: " + klass + " instance is currently being created.");
+                }
                 return node.component;
             }
             node = node.next;
         }
 
-        throw new IllegalArgumentException("No " + klass + " instance with qualifier '" + qualifier + "'.");
+        return null;
     }
 
     /**
